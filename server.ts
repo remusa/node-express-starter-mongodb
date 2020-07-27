@@ -5,8 +5,8 @@ import helmet from 'helmet'
 import morgan from 'morgan'
 import path from 'path'
 import connectDB from './config/db'
-import storesRouter from './routes/stores'
-import usersRouter from './routes/users'
+import storesRouter from './resources/stores/stores.router'
+import usersRouter from './resources/users/users.router'
 
 dotenv.config({
   path: './config/.env.dev',

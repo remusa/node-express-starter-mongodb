@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express'
-import { User } from '../../models/User'
-import mongoose, { Error } from 'mongoose'
+import { NextFunction, Request, Response } from 'express'
+import { Error } from 'mongoose'
+import { User } from './users.model'
 
 // @desc Get all users
 // @route GET /api/v1/users

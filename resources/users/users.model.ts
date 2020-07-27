@@ -1,9 +1,8 @@
-import mongoose, { Schema, Model, Document } from 'mongoose'
+import mongoose, { Document, Model, Schema } from 'mongoose'
 
 interface IUser extends Document {
   email: string
   password: string
-  // createdAt: Date
 }
 
 const UserSchema: Schema = new mongoose.Schema(

@@ -1,5 +1,5 @@
-import mongoose, { Schema, Model, Document } from 'mongoose'
-import geocoder from '../utils/geocoder'
+import mongoose, { Document, Model, Schema } from 'mongoose'
+import geocoder from '../../utils/geocoder'
 
 interface IStore extends Document {
   storeId: string
