@@ -21,10 +21,37 @@ const getUsers = async (req: Request, res: Response, next: NextFunction) => {
   }
 }
 
+// @desc Get an user by its id
+// @route GET /api/v1/users/:id
+// @access Public
+const getUser = () => async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    console.log(req.params)
+    const user = await User.findById('5f1ef5900eaf332d2ce56d5b')
+
+    return res.status(201).json({
+      success: true,
+      data: user,
+    })
+  } catch (err) {
+    console.error(`Error creating user: ${err.message}`)
+
+    if (err.code === 11000) {
+      return res.status(400).json({
+        error: 'User already exists',
+      })
+    }
+
+    res.status(500).json({
+      error: `Server error: ${err.message}`,
+    })
+  }
+}
+
 // @desc Create an user
 // @route POST /api/v1/users
 // @access Public
-const postUser = () => async (req: Request, res: Response, next: NextFunction) => {
+const createUser = () => async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = await User.create(req.body)
 
@@ -47,4 +74,4 @@ const postUser = () => async (req: Request, res: Response, next: NextFunction) =
   }
 }
 
-export { getUsers, postUser }
+export { getUsers, getUser, createUser }

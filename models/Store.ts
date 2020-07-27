@@ -9,39 +9,39 @@ interface IStore extends Document {
     coordinates: number
     formattedAddress: string
   }
-  createdAt: Date
 }
 
-const StoreSchema: Schema = new mongoose.Schema({
-  storeId: {
-    type: String,
-    required: [true, 'Please add a storeID'],
-    unique: true,
-    trim: true,
-    maxlength: [10, 'Store ID must be less than 10 characters'],
-  },
-  address: {
-    type: String,
-    required: [true, 'Please add an address'],
-  },
-  location: {
-    type: {
+const StoreSchema: Schema = new mongoose.Schema(
+  {
+    storeId: {
       type: String,
-      enum: ['Point'],
-      // required: [true, ''],
+      required: [true, 'Please add a storeID'],
+      unique: true,
+      trim: true,
+      maxlength: [10, 'Store ID must be less than 10 characters'],
     },
-    coordinates: {
-      type: [Number],
-      // required: [true, ''],
-      index: '2dsphere',
+    address: {
+      type: String,
+      required: [true, 'Please add an address'],
     },
-    formattedAddress: String,
+    location: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        // required: [true, ''],
+      },
+      coordinates: {
+        type: [Number],
+        // required: [true, ''],
+        index: '2dsphere',
+      },
+      formattedAddress: String,
+    },
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
+  {
+    timestamps: true,
   },
-})
+)
 
 // Geocode & create location
 StoreSchema.pre('save', async function (next: mongoose.HookNextFunction) {

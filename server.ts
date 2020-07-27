@@ -15,8 +15,8 @@ dotenv.config({
 const PORT = process.env.PORT || 8000
 const ENV: string = process.env.NODE_ENV || 'development'
 const DB_URL: string = process.env.DB_URL || ''
-// const CORS_WHITELIST = (process.env.CORS_WHITELIST && process.env.CORS_WHITELIST.split(',')) || ''
-const CORS_WHITELIST = '*'
+const CORS_WHITELIST =
+  ENV === 'production' ? process.env.CORS_WHITELIST && process.env.CORS_WHITELIST.split(',') : '*'
 
 // Database
 connectDB(DB_URL)
