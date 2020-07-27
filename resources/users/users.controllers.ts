@@ -1,140 +1,36 @@
 import { NextFunction, Request, Response } from 'express'
 import { Error } from 'mongoose'
+import { crudControllers } from '../generic/crud'
 import { User } from './users.model'
 
-// @desc Get all users
-// @route GET /api/v1/users
+// @desc Get info about current user
+// @route GET /api/v1/me
 // @access Public
-const getUsers = async (req: Request, res: Response, next: NextFunction) => {
-  await User.find()
-    .sort({ email: 1 })
-    .then(users => {
-      return res.status(200).json({
-        success: true,
-        count: users.length,
-        data: users,
-      })
-    })
-    .catch(err => {
-      console.error(`Error getting stores: ${err.message}`)
+export const getMe = () => async (req: Request, res: Response, next: NextFunction) => {
+  // const me = req.user || null
+  const me = null
 
-      return res.status(500).json({
-        error: `Server error: ${err.message}`,
-      })
-    })
+  res.status(200).json({
+    success: true,
+    data: me,
+  })
 }
 
-// @desc Get an user by its id
-// @route GET /api/v1/users/:id
+// @desc Update current user
+// @route PUT /api/v1/me
 // @access Public
-const getUser = () => async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = req.params
-
-  await User.findById(userId)
-    .then(user => {
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          error: 'User not found',
-        })
-      }
-
-      return res.status(200).json({
-        success: true,
-        data: user,
-      })
-    })
-    .catch(err => {
-      console.error(`Error creating user: ${err.message}`)
-
-      if (err instanceof Error.CastError) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid User id',
-        })
-      }
-
-      return res.status(500).json({
-        error: `Server error: ${err.message}`,
-      })
-    })
-}
-
-// @desc Create an user
-// @route POST /api/v1/users
-// @access Public
-const createUser = () => async (req: Request, res: Response, next: NextFunction) => {
+export const updateMe = () => async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const user = await User.create(req.body)
-
-    return res.status(201).json({
-      success: true,
-      data: user,
-    })
-  } catch (err) {
-    console.error(`Error creating user: ${err.message}`)
-
-    if (err.code === 11000) {
-      return res.status(400).json({
-        error: 'User already exists',
-      })
-    }
-
-    res.status(500).json({
-      error: `Server error: ${err.message}`,
-    })
-  }
-}
-
-// @desc Delete an user
-// @route DELETE /api/v1/users
-// @access Public
-const deleteUser = () => async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { userId } = req.params
-
-    await User.findOneAndDelete({ _id: userId }).then(user => {
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          error: 'User not found',
-        })
-      }
-
-      return res.status(200).json({
-        success: true,
-        message: 'Succesfully deleted user',
-      })
-    })
-  } catch (err) {
-    console.error(`Error deleting user: ${err.message}`)
-
-    if (err instanceof Error.CastError) {
-      return res.status(400).json({
-        error: 'User id is invalid',
-      })
-    }
-
-    res.status(500).json({
-      error: `Server error: ${err.message}`,
-    })
-  }
-}
-
-// @desc Get an user by its id
-// @route GET /api/v1/users/:id
-// @access Public
-const updateUser = () => async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { userId } = req.params
+    // const id = req.user._id
+    const id = null
     const updatedValues = req.body
 
-    await User.findByIdAndUpdate(userId, updatedValues, { new: true }).then(user => {
-      return res.status(200).json({
-        success: true,
-        message: 'Succesfully updated user',
-        data: user,
-      })
+    const user = await User.findOneAndUpdate(id, updatedValues, { new: true }).lean()
+
+    return res.status(200).json({
+      success: true,
+      message: 'Succesfully updated user',
+      data: user,
     })
   } catch (err) {
     console.error(`Error updating user: ${err.message}`)
@@ -145,10 +41,20 @@ const updateUser = () => async (req: Request, res: Response, next: NextFunction)
       })
     }
 
-    res.status(500).json({
-      error: `Server error: ${err.message}`,
-    })
+    res
+      .status(500)
+      .json({
+        error: `Server error: ${err.message}`,
+      })
+      .end()
   }
 }
 
-export { getUsers, getUser, createUser, updateUser, deleteUser }
+const userControllers = crudControllers(User)
+console.log('crudControllers', crudControllers)
+
+export default {
+  ...userControllers,
+  getMe,
+  updateMe,
+}
