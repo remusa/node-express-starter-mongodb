@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Store Locator | Add Store</title>
+
+    <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet" />
+
+    <script defer src="js/add.js"></script>
+  </head>
+
+  <body class="flex flex-col items-center h-screen antialiased bg-gray-100 text-gray-800">
+    <header class="w-1/2">
+      <nav class="flex justify-between items-center mt-6 px-5">
+        <a class="flex" href="/">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M21 8.77217L14.0208 1.79299C12.8492 0.621414 10.9497 0.621413 9.77817 1.79299L3 8.57116V23.0858H10V17.0858C10 15.9812 10.8954 15.0858 12 15.0858C13.1046 15.0858 14 15.9812 14 17.0858V23.0858H21V8.77217ZM11.1924 3.2072L5 9.39959V21.0858H8V17.0858C8 14.8767 9.79086 13.0858 12 13.0858C14.2091 13.0858 16 14.8767 16 17.0858V21.0858H19V9.6006L12.6066 3.2072C12.2161 2.81668 11.5829 2.81668 11.1924 3.2072Z"
+              fill="currentColor"
+            />
+          </svg>
+
+          <span class="ml-2">Home</span>
+        </a>
+
+        <ul class="list-none">
+          <li>
+            <a href="/add">Add Store </a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <h1 class="flex items-center mt-4 font-sans text-3xl text-center">
+      <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+        <path
+          fill-rule="evenodd"
+          d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+          clip-rule="evenodd"
+        ></path>
+      </svg>
+
+      <span class="ml-2">Add Store</span>
+    </h1>
+
+    <div class="flex flex-col items-center my-3 px-8">
+      <form
+        id="store-form"
+        method="POST"
+        class="mt-8 bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
+      >
+        <div class="">
+          <label class="block text-gray-700 text-sm font-bold mb-2" for="store-id">
+            Store ID
+          </label>
+          <input
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            id="store-id"
+            type="text"
+            placeholder="0000"
+            required
+          />
+
+          <label class="block text-gray-700 text-sm font-bold mb-2" for="store-address">
+            Store Address
+          </label>
+          <input
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            id="store-address"
+            type="text"
+            placeholder="store-address"
+            required
+          />
+        </div>
+
+        <div class="mt-6 flex justify-between items-center">
+          <button
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            type="submit"
+          >
+            Add Store
+          </button>
+
+          <a
+            class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+            href="/"
+          >
+            Go back
+          </a>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>
