@@ -7,18 +7,20 @@ import { Error, Model } from 'mongoose'
 const getMany = (model: Model<any>) => async (req: Request, res: Response) => {
   await model
     .find()
-    .then(data => {
+    .lean()
+    .exec()
+    .then(docs => {
       return res.status(200).json({
         success: true,
-        count: data.length,
-        data,
+        count: docs.length,
+        data: docs,
       })
     })
     .catch(err => {
       console.error(`Error getting resources: ${err.message}`)
 
       return res
-        .status(500)
+        .status(400)
         .json({
           error: `Server error: ${err.message}`,
         })
@@ -34,6 +36,8 @@ const getOne = (model: Model<any>) => async (req: Request, res: Response) => {
 
   await model
     .findById(id)
+    .lean()
+    .exec()
     .then(user => {
       if (!user) {
         return res.status(404).json({
@@ -51,10 +55,13 @@ const getOne = (model: Model<any>) => async (req: Request, res: Response) => {
       console.error(`Error creating resource: ${err.message}`)
 
       if (err instanceof Error.CastError) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid resource id',
-        })
+        return res
+          .status(400)
+          .json({
+            success: false,
+            error: 'Invalid resource id',
+          })
+          .end()
       }
 
       return res.status(500).json({
@@ -96,26 +103,37 @@ const deleteOne = (model: Model<any>) => async (req: Request, res: Response) => 
   try {
     const { id } = req.params
 
-    await model.findByIdAndDelete(id).then(user => {
-      if (!user) {
-        return res.status(404).json({
+    const deleted = await model
+      .findOneAndRemove({
+        _id: id,
+      })
+      .lean()
+      .exec()
+
+    if (!deleted) {
+      return res
+        .status(404)
+        .json({
           success: false,
           error: 'Resource not found',
         })
-      }
+        .end()
+    }
 
-      return res.status(200).json({
-        success: true,
-        message: 'Succesfully deleted resource',
-      })
+    return res.status(200).json({
+      success: true,
+      message: 'Successfully deleted resource',
     })
   } catch (err) {
     console.error(`Error deleting resource: ${err.message}`)
 
     if (err instanceof Error.CastError) {
-      return res.status(400).json({
-        error: 'Resource id is invalid',
-      })
+      return res
+        .status(400)
+        .json({
+          error: 'Resource id is invalid',
+        })
+        .end()
     }
 
     res.status(500).json({

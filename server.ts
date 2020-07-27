@@ -1,6 +1,6 @@
 import cors from 'cors'
 import dotenv from 'dotenv'
-import express, { Request, Response } from 'express'
+import express, { Request, Response, json, urlencoded } from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import path from 'path'
@@ -25,8 +25,8 @@ connectDB(DB_URL)
 const app: express.Application = express()
 
 // Security
-app.use(helmet())
 app.disable('x-powered-by')
+app.use(helmet())
 app.use(
   cors({
     origin: CORS_WHITELIST,
@@ -39,16 +39,16 @@ app.use(
   }),
 )
 
-// Static folder
-const PUBLIC: string = path.join(__dirname, 'public/')
-app.use(express.static(PUBLIC))
-
 // Logging
 app.use(morgan('dev'))
 
 // Parsing
-app.use(express.json()) // body-parser
-app.use(express.urlencoded({ extended: true }))
+app.use(json()) // body-parser
+app.use(urlencoded({ extended: true }))
+
+// Static folder
+const PUBLIC: string = path.join(__dirname, 'public/')
+app.use(express.static(PUBLIC))
 
 // Routes
 const publicFile = (file: string): string => path.join(PUBLIC, file)

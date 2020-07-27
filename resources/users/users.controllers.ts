@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { Error } from 'mongoose'
-import { crudControllers } from '../generic/crud'
+import { crudControllers } from '../../utils/crud'
 import { User } from './users.model'
 
 // @desc Get info about current user
@@ -51,7 +51,6 @@ export const updateMe = () => async (req: Request, res: Response, next: NextFunc
 }
 
 const userControllers = crudControllers(User)
-console.log('crudControllers', crudControllers)
 
 export default {
   ...userControllers,
