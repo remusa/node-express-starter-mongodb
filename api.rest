@@ -26,14 +26,6 @@ GET http://localhost:8000/api/v1/users HTTP/1.1
 
 ###
 
-GET http://localhost:8000/api/v1/users/:id HTTP/1.1
-
-{
-	"id": "5f1ef5900eaf332d2ce56d5b"
-}
-
-###
-
 POST http://localhost:8000/api/v1/users HTTP/1.1
 Content-Type: application/json
 
@@ -41,3 +33,20 @@ Content-Type: application/json
 	"email": "test@test.com",
 	"password": "password123"
 }
+
+###
+
+GET http://localhost:8000/api/v1/users/5f1efc3c3bfb4a1744a093a5 HTTP/1.1
+
+###
+
+PUT http://localhost:8000/api/v1/users/5f1efc3c3bfb4a1744a093a51 HTTP/1.1
+Content-Type: application/json
+
+{
+	"email": "test_updated@test.com"
+}
+
+###
+
+DELETE http://localhost:8000/api/v1/users/5f1ef5900eaf332d2ce56d5b HTTP/1.1
