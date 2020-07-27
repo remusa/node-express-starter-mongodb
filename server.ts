@@ -1,12 +1,13 @@
 import cors from 'cors'
 import dotenv from 'dotenv'
-import express, { Request, Response, json, urlencoded } from 'express'
+import express, { json, Request, Response, urlencoded } from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import path from 'path'
 import connectDB from './config/db'
 import storesRouter from './resources/stores/stores.router'
 import usersRouter from './resources/users/users.router'
+import { protect, signin, signup } from './utils/auth'
 
 dotenv.config({
   path: './config/.env.dev',
@@ -56,7 +57,12 @@ const publicFile = (file: string): string => path.join(PUBLIC, file)
 app.get('/', (req: Request, res: Response) => res.sendFile(publicFile('index.html')))
 app.get('/add', (req: Request, res: Response) => res.sendFile(publicFile('add.html')))
 
+// Auth routes
+app.post('/auth/signup', signup)
+app.post('/auth/signin', signin)
+
 // API routes
+app.use('/api', protect)
 app.use('/api/v1/stores', storesRouter)
 app.use('/api/v1/users', usersRouter)
 

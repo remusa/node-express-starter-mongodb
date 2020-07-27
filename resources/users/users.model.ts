@@ -1,9 +1,9 @@
 import mongoose, { Document, Model, Schema } from 'mongoose'
 import bcrypt from 'bcryptjs'
 
-const SALT = bcrypt.genSaltSync(10)
+const BCRYPT_SALT = bcrypt.genSaltSync(10)
 
-interface IUser extends Document {
+export interface IUser extends Document {
   email: string
   password: string
 }
@@ -31,16 +31,17 @@ const UserSchema: Schema = new mongoose.Schema(
 )
 
 UserSchema.pre('save', async function (next: mongoose.HookNextFunction) {
-  // if (!this.isModified('password')) {
-  //   return next()
-  // }
+  if (!this.isModified('password')) {
+    return next()
+  }
 
   const password = this.get('password')
 
-  bcrypt.hash(password, SALT, (err, hash) => {
+  bcrypt.hash(password, BCRYPT_SALT, (err, hash) => {
     if (err) {
       return next(err)
     }
+    console.log('hash', hash)
 
     this.set('password', hash)
 
