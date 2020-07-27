@@ -41,10 +41,11 @@ UserSchema.pre('save', async function (next: mongoose.HookNextFunction) {
     if (err) {
       return next(err)
     }
-    console.log('hash', hash)
 
     this.set('password', hash)
+    this.save()
 
+    console.log('hashed password: ', this.get('password'))
     next()
   })
 })
