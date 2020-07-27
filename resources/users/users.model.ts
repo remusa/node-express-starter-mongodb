@@ -9,14 +9,14 @@ const UserSchema: Schema = new mongoose.Schema(
   {
     email: {
       type: String,
-      required: [true, 'Please include an email'],
+      required: [true, 'Email required'],
       unique: [true, 'Email already exists'],
       trim: true,
       maxlength: [50, 'Email must be less than 50 characters'],
     },
     password: {
       type: String,
-      required: [true, 'Invalid credentials'],
+      required: [true, 'Password required'],
       trim: true,
       minLength: [8, 'Password must be at least 8 characters'],
       maxlength: [50, 'Password must be less than 50 characters'],

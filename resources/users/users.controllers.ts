@@ -129,7 +129,7 @@ const updateUser = () => async (req: Request, res: Response, next: NextFunction)
     const { userId } = req.params
     const updatedValues = req.body
 
-    await User.findOneAndUpdate({ _id: userId }, updatedValues).then(user => {
+    await User.findByIdAndUpdate(userId, updatedValues, { new: true }).then(user => {
       return res.status(200).json({
         success: true,
         message: 'Succesfully updated user',
