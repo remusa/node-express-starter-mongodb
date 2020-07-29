@@ -6,9 +6,8 @@ import { User } from './users.model'
 // @desc Get info about current user
 // @route GET /api/v1/me
 // @access Public
-export const getMe = () => async (req: Request, res: Response, next: NextFunction) => {
-  // const me = req.user || null
-  const me = null
+export const getMe = () => async (req: any, res: Response, next: NextFunction) => {
+  const me = req.user
 
   res.status(200).json({
     success: true,
