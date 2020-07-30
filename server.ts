@@ -7,7 +7,7 @@ import path from 'path'
 import connectDB from './config/db'
 import storesRouter from './resources/stores/stores.router'
 import usersRouter from './resources/users/users.router'
-import { protect, login, register } from './utils/auth'
+import { login, protect, register, validate, validateRegister } from './utils/auth'
 
 dotenv.config({
   path: './config/.env.dev',
@@ -58,8 +58,8 @@ app.get('/', (req: Request, res: Response) => res.sendFile(publicFile('index.htm
 app.get('/add', (req: Request, res: Response) => res.sendFile(publicFile('add.html')))
 
 // Auth routes
-app.post('/auth/register', register)
-app.post('/auth/login', login)
+app.post('/auth/register', validateRegister, register)
+app.post('/auth/login', validate, login)
 
 // API routes
 app.use('/api', protect)

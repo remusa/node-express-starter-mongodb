@@ -1,9 +1,10 @@
 import dotenv from 'dotenv'
 import { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
+import passport from 'passport'
 import { User } from '../resources/users/users.model'
-import bcrypt from 'bcryptjs'
-const passport = require('passport')
+import { check, validationResult } from 'express-validator'
+
 const Strategy = require('passport-local').Strategy
 
 dotenv.config({
@@ -15,9 +16,9 @@ const jwtOptions: jwt.SignOptions = {
   algorithm: 'HS256',
   expiresIn: '100d',
 }
-const adminPassword = process.env.ADMIN_PASSWORD || 'iamthewalrus'
 
-passport.use(adminStrategy())
+const adminPassword = process.env.ADMIN_PASSWORD || 'iamthewalrus'
+// passport.use(adminStrategy())
 const authenticate = passport.authenticate('local', { session: false })
 
 const sign = async (user: any) => {
@@ -25,11 +26,11 @@ const sign = async (user: any) => {
   return token
 }
 
-const verify = async (token: string) => {
-  const jwtString = token.replace(/^Bearer /i, '')
+const verify = async (jwtString: string) => {
+  const token = jwtString.replace(/^Bearer /i, '')
 
   try {
-    const payload = await jwt.verify(jwtString, JWT_SECRET)
+    const payload = await jwt.verify(token, JWT_SECRET)
     return payload
   } catch (err) {
     err.statusCode = 401
@@ -37,20 +38,58 @@ const verify = async (token: string) => {
   }
 }
 
-function adminStrategy() {
-  return new Strategy(function (username: string, password: string, cb: any) {
+/* export const adminStrategy = () => {
+  return new Strategy(async (username: string, password: string, cb: any) => {
     const isAdmin = username === 'admin' && password === adminPassword
-    if (isAdmin) return cb(null, { username: 'admin' })
+
+    if (isAdmin) {
+      return cb(null, { username: 'admin' })
+    }
+
+    try {
+      const user = await User.findOne({ email: 'admin@admin.com' })
+
+      if (!user) {
+        return cb(null, false)
+      }
+
+      const isUser = await bcrypt.compare(password, user.password)
+
+      if (isUser) {
+        return cb(null, { data: user })
+      }
+    } catch (err) {}
+
     cb(null, false)
   })
-}
+} */
+
+export const validate = [
+  check('email', 'Please include a valid email')
+    .exists()
+    .isEmail()
+    .normalizeEmail()
+    .isLength({ min: 5, max: 50 }),
+  check('password', 'Password is required').exists().trim().isLength({ min: 8, max: 50 }),
+]
+
+export const validateRegister = [
+  ...validate,
+  check('passwordConfirmation').custom((value, { req }) => {
+    if (value !== req.body.password) {
+      throw new Error('Password confirmation does not match password')
+    }
+    return true
+  }),
+]
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
-  const { email, password, username } = req.body
-
-  if (!email || !password) {
-    return res.status(400).json({ success: false, error: 'Invalid credentials' })
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() })
   }
+
+  const { email, password, username } = req.body
 
   try {
     const user = await User.create({ email, password, username })
@@ -71,12 +110,14 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 }
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
-  const { email, password } = req.body
-  const error = { success: false, error: 'Invalid credentials' }
-
-  if (!email || !password) {
-    return res.status(400).json(error)
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() })
   }
+
+  const { email, password } = req.body
+
+  const error = { success: false, error: 'Invalid credentials' }
 
   try {
     const user = await User.findOne({ email }).select('email password').exec()
@@ -107,7 +148,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 }
 
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
-  const { authorization: bearer } = req.headers
+  const bearer = req.headers.authorization || req.cookies.jwt
 
   if (!bearer || !bearer.startsWith('Bearer ')) {
     return res.status(401).json({
@@ -116,14 +157,15 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
     })
   }
 
-  const token = bearer.split('Bearer ')[1].trim()
+  // const token = bearer.split('Bearer ')[1].trim()
+  const token = bearer.trim()
 
   let payload
 
   try {
     payload = await verify(token)
   } catch (err) {
-    console.error(`Invalid token: ${err.message}`)
+    console.error(`Unauthorized (invalid token): ${err.message}`)
 
     return res.status(401).json({
       success: false,
