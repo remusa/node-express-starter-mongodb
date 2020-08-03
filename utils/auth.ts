@@ -16,6 +16,7 @@ const jwtOptions: jwt.SignOptions = {
   algorithm: 'HS256',
   expiresIn: '100d',
 }
+const COOKIE_MAX_AGE = 1000 * 60 * 60 * 24 * 365 // 1 year cookie
 
 const adminPassword = process.env.ADMIN_PASSWORD || 'iamthewalrus'
 // passport.use(adminStrategy())
@@ -140,7 +141,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     const token = await sign(user)
 
-    res.cookie('jwt', token, { httpOnly: true })
+    res.cookie('jwt', token, { httpOnly: true, maxAge: COOKIE_MAX_AGE })
 
     return res.status(201).json({ success: true, user, token })
   } catch (err) {
@@ -155,7 +156,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
 export const ensureUser = async (req: Request, res: Response, next: NextFunction) => {
   // @ts-ignore
-  const bearer = req.headers.authorization || req.headers.cookie.split('jwt=')[1] || req.cookies.jwt
+  const bearer = req.headers.authorization || req.cookies.jwt
 
   if (!bearer) {
     //  || !bearer.startsWith('Bearer ')
@@ -197,7 +198,9 @@ export const ensureUser = async (req: Request, res: Response, next: NextFunction
 
 export const ensureAdmin = async (req: Request, res: Response, next: NextFunction) => {
   // @ts-ignore
-  const bearer = req.headers.authorization || req.headers.cookie.split('jwt=')[1] || req.cookies.jwt
+  const bearer = req.headers.authorization || req.cookies.jwt
+  console.log('Cookies: ', req.cookies)
+  console.log('Signed Cookies: ', req.signedCookies)
 
   try {
     const payload = await verify(bearer)
@@ -216,3 +219,26 @@ export const ensureAdmin = async (req: Request, res: Response, next: NextFunctio
     next(err)
   }
 }
+
+// export const hasPermission = (user: any, permissionsNeeded: string[]) => {
+//   const matchedPermissions = user.permissions.filter(permissionTheyHave =>
+//     permissionsNeeded.includes(permissionTheyHave),
+//   )
+
+//   if (!matchedPermissions.length) {
+//     throw new Error(`You do not have sufficient permissions
+//       : ${permissionsNeeded}
+//       You Have:
+//       ${user.permissions}
+//       `)
+//   }
+// }
+
+// const ownsItem = item.user.id === ctx.request.userId
+// const hasPermissions = ctx.request.user.permissions.some(permission =>
+//   ['ADMIN', 'ITEMDELETE'].includes(permission),
+// )
+
+// if (!ownsItem && !hasPermissions) {
+//   throw new Error("You don't have permission to do that!")
+// }

@@ -1,6 +1,7 @@
 import cors from 'cors'
 import dotenv from 'dotenv'
 import express, { json, Request, Response, urlencoded, NextFunction } from 'express'
+import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import path from 'path'
@@ -46,6 +47,7 @@ app.use(morgan('dev'))
 // Parsing
 app.use(json()) // body-parser
 app.use(urlencoded({ extended: true }))
+app.use(cookieParser())
 
 // Static folder
 const PUBLIC: string = path.join(__dirname, 'public/')
