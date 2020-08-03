@@ -1,13 +1,13 @@
 import cors from 'cors'
 import dotenv from 'dotenv'
-import express, { json, Request, Response, urlencoded } from 'express'
+import express, { json, Request, Response, urlencoded, NextFunction } from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import path from 'path'
 import connectDB from './config/db'
 import storesRouter from './resources/stores/stores.router'
 import usersRouter from './resources/users/users.router'
-import { login, protect, register, validate, validateRegister } from './utils/auth'
+import { login, ensureUser, register, validate, validateRegister, ensureAdmin } from './utils/auth'
 
 dotenv.config({
   path: './config/.env.dev',
@@ -62,9 +62,17 @@ app.post('/auth/register', validateRegister, register)
 app.post('/auth/login', validate, login)
 
 // API routes
-app.use('/api', protect)
+app.use('/api', ensureUser)
 app.use('/api/v1/stores', storesRouter)
 app.use('/api/v1/users', usersRouter)
 
+// Admin routes
+app.use('/api/v1/admin', ensureAdmin, (req: Request, res: Response, next: NextFunction) => {
+  res.status(200).json({
+    success: true,
+    messagge: 'Admin privileges',
+  })
+})
+
 // Server
-app.listen(PORT, () => console.log(`⚡️[server]: Server running in ${ENV} mode on port ${PORT}`))
+app.listen(PORT, () => console.log(`⚡️[🚀]: Server running in ${ENV} mode on port ${PORT}`))

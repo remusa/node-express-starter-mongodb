@@ -21,13 +21,19 @@ const adminPassword = process.env.ADMIN_PASSWORD || 'iamthewalrus'
 // passport.use(adminStrategy())
 const authenticate = passport.authenticate('local', { session: false })
 
+// const sign = async (user: any) => {
 const sign = async (user: any) => {
+  // const token = await jwt.sign({ id: user._id }, JWT_SECRET, jwtOptions)
   const token = await jwt.sign({ id: user._id }, JWT_SECRET, jwtOptions)
   return token
 }
 
 const verify = async (jwtString: string) => {
-  const token = jwtString.replace(/^Bearer /i, '')
+  // const token = jwtString.split('Bearer ')[1].trim()
+  const token = jwtString
+    .replace(/^Bearer /i, '')
+    .replace(/^jwt= /i, '')
+    .trim()
 
   try {
     const payload = await jwt.verify(token, JWT_SECRET)
@@ -147,23 +153,22 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   }
 }
 
-export const protect = async (req: Request, res: Response, next: NextFunction) => {
-  const bearer = req.headers.authorization || req.cookies.jwt
+export const ensureUser = async (req: Request, res: Response, next: NextFunction) => {
+  // @ts-ignore
+  const bearer = req.headers.authorization || req.headers.cookie.split('jwt=')[1] || req.cookies.jwt
 
-  if (!bearer || !bearer.startsWith('Bearer ')) {
+  if (!bearer) {
+    //  || !bearer.startsWith('Bearer ')
     return res.status(401).json({
       success: false,
       error: 'No authorization token',
     })
   }
 
-  // const token = bearer.split('Bearer ')[1].trim()
-  const token = bearer.trim()
-
   let payload
 
   try {
-    payload = await verify(token)
+    payload = await verify(bearer)
   } catch (err) {
     console.error(`Unauthorized (invalid token): ${err.message}`)
 
@@ -188,4 +193,26 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
   req.user = user
 
   next()
+}
+
+export const ensureAdmin = async (req: Request, res: Response, next: NextFunction) => {
+  // @ts-ignore
+  const bearer = req.headers.authorization || req.headers.cookie.split('jwt=')[1] || req.cookies.jwt
+
+  try {
+    const payload = await verify(bearer)
+
+    // @ts-ignore
+    if (payload.id === '5f286973c37105343cfe40db' || payload.permissions.includes('admin')) {
+      return next()
+    }
+  } catch (err) {
+    // res.status(403).json({
+    //   success: false,
+    //   error: 'Forbidden',
+    // })
+    err.statusCode = 403
+    // err.message = 'Forbidden'
+    next(err)
+  }
 }
