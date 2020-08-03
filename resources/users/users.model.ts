@@ -4,10 +4,16 @@ import validator from 'validator'
 
 const BCRYPT_SALT = bcrypt.genSaltSync(10)
 
+enum PERMISSIONS {
+  'ADMIN' = 'ADMIN',
+  'BASIC' = 'BASIC',
+}
+
 export interface IUser extends Document {
   email: string
   password: string
   username?: string
+  permissions?: string[]
   checkPassword: (password: string) => boolean
 }
 
@@ -38,6 +44,10 @@ const UserSchema: Schema = new Schema(
       default: '',
       minLength: [3, 'Username must be at least 3 characters'],
       maxlength: [16, 'Username must be less than 16 characters'],
+    },
+    permissions: {
+      type: [String],
+      default: [PERMISSIONS['BASIC']],
     },
   },
   {

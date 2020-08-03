@@ -199,40 +199,45 @@ export const ensureUser = async (req: Request, res: Response, next: NextFunction
 export const ensureAdmin = async (req: Request, res: Response, next: NextFunction) => {
   // @ts-ignore
   const bearer = req.headers.authorization || req.cookies.jwt
-  console.log('Cookies: ', req.cookies)
-  console.log('Signed Cookies: ', req.signedCookies)
 
   try {
     const payload = await verify(bearer)
 
     // @ts-ignore
-    if (payload.id === '5f286973c37105343cfe40db' || payload.permissions.includes('admin')) {
-      return next()
+    const user = await User.findById(payload.id).select('-password').lean().exec()
+
+    // @ts-ignore
+    const hasPermissions = user.permissions.some(permission => ['ADMIN'].includes(permission))
+
+    if (!hasPermissions) {
+      throw new Error('Not enough permissions')
     }
+
+    next()
   } catch (err) {
-    // res.status(403).json({
-    //   success: false,
-    //   error: 'Forbidden',
-    // })
-    err.statusCode = 403
+    res.status(403).json({
+      success: false,
+      error: err.message,
+    })
+    // err.statusCode = 403
     // err.message = 'Forbidden'
-    next(err)
+    // next(err)
   }
 }
 
-// export const hasPermission = (user: any, permissionsNeeded: string[]) => {
-//   const matchedPermissions = user.permissions.filter(permissionTheyHave =>
-//     permissionsNeeded.includes(permissionTheyHave),
-//   )
+export const hasPermission = (user: any, permissionsNeeded: string[]) => {
+  const matchedPermissions = user.permissions.filter((permissionTheyHave: string) =>
+    permissionsNeeded.includes(permissionTheyHave),
+  )
 
-//   if (!matchedPermissions.length) {
-//     throw new Error(`You do not have sufficient permissions
-//       : ${permissionsNeeded}
-//       You Have:
-//       ${user.permissions}
-//       `)
-//   }
-// }
+  if (!matchedPermissions.length) {
+    throw new Error(`Insufficient permissions
+      : ${permissionsNeeded}
+      Current:
+      ${user.permissions}
+      `)
+  }
+}
 
 // const ownsItem = item.user.id === ctx.request.userId
 // const hasPermissions = ctx.request.user.permissions.some(permission =>
