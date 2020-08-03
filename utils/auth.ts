@@ -215,12 +215,11 @@ export const ensureAdmin = async (req: Request, res: Response, next: NextFunctio
 
     next()
   } catch (err) {
-    res.status(403).json({
+    res.status(401).json({
       success: false,
       error: err.message,
     })
-    // err.statusCode = 403
-    // err.message = 'Forbidden'
+    // err.statusCode = 401
     // next(err)
   }
 }
