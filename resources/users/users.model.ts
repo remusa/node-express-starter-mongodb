@@ -1,5 +1,5 @@
-import mongoose, { Document, Model, Schema } from 'mongoose'
 import bcrypt from 'bcryptjs'
+import mongoose, { Document, Model, model, Schema } from 'mongoose'
 import validator from 'validator'
 
 const BCRYPT_SALT = bcrypt.genSaltSync(10)
@@ -11,7 +11,7 @@ export interface IUser extends Document {
   checkPassword: (password: string) => boolean
 }
 
-const UserSchema: Schema = new mongoose.Schema(
+const UserSchema: Schema = new Schema(
   {
     email: {
       type: String,
@@ -66,4 +66,4 @@ UserSchema.methods.checkPassword = async function (password: string) {
   return match
 }
 
-export const User: Model<IUser> = mongoose.model('User', UserSchema)
+export const User: Model<IUser> = model('User', UserSchema)

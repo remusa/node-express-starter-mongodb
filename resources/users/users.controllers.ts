@@ -9,7 +9,7 @@ import { User } from './users.model'
 export const getMe = () => async (req: any, res: Response, next: NextFunction) => {
   const me = req.user
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     data: me,
   })
@@ -20,11 +20,10 @@ export const getMe = () => async (req: any, res: Response, next: NextFunction) =
 // @access Public
 export const updateMe = () => async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // const id = req.user._id
-    const id = null
+    const id = req.user
     const updatedValues = req.body
 
-    const user = await User.findOneAndUpdate(id, updatedValues, { new: true }).lean()
+    const user = await User.findOneAndUpdate(id, updatedValues, { new: true }).lean().exec()
 
     return res.status(200).json({
       success: true,
@@ -40,12 +39,9 @@ export const updateMe = () => async (req: Request, res: Response, next: NextFunc
       })
     }
 
-    res
-      .status(500)
-      .json({
-        error: `Server error: ${err.message}`,
-      })
-      .end()
+    res.status(500).json({
+      error: `Server error: ${err.message}`,
+    })
   }
 }
 
