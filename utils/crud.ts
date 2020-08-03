@@ -5,6 +5,13 @@ import { Error, Model } from 'mongoose'
 // @route GET /api/v1/resource
 // @access Public
 const getMany = (model: Model<any>) => async (req: Request, res: Response) => {
+  console.log('Current User: ', req.user)
+  // @ts-ignore
+  // const user = await User.findById(req.user.id).select('-password').lean().exec()
+  // @ts-ignore
+  // const hasPermissions = user.permissions.some(permission => ['ADMIN'].includes(permission))
+  // if (!hasPermissions) throw new Error('Not enough permissions')
+
   await model
     .find()
     .lean()

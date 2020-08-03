@@ -16,6 +16,7 @@ const jwtOptions: jwt.SignOptions = {
   algorithm: 'HS256',
   expiresIn: '100d',
 }
+const COOKIE_MAX_AGE = 1000 * 60 * 60 * 24 * 365 // 1 year cookie
 
 const adminPassword = process.env.ADMIN_PASSWORD || 'iamthewalrus'
 // passport.use(adminStrategy())
@@ -140,7 +141,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     const token = await sign(user)
 
-    res.cookie('jwt', token, { httpOnly: true })
+    res.cookie('jwt', token, { httpOnly: true, maxAge: COOKIE_MAX_AGE })
 
     return res.status(201).json({ success: true, user, token })
   } catch (err) {
@@ -155,7 +156,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
 export const ensureUser = async (req: Request, res: Response, next: NextFunction) => {
   // @ts-ignore
-  const bearer = req.headers.authorization || req.headers.cookie.split('jwt=')[1] || req.cookies.jwt
+  const bearer = req.headers.authorization || req.cookies.jwt
 
   if (!bearer) {
     //  || !bearer.startsWith('Bearer ')
@@ -197,22 +198,52 @@ export const ensureUser = async (req: Request, res: Response, next: NextFunction
 
 export const ensureAdmin = async (req: Request, res: Response, next: NextFunction) => {
   // @ts-ignore
-  const bearer = req.headers.authorization || req.headers.cookie.split('jwt=')[1] || req.cookies.jwt
+  const bearer = req.headers.authorization || req.cookies.jwt
 
   try {
     const payload = await verify(bearer)
 
     // @ts-ignore
-    if (payload.id === '5f286973c37105343cfe40db' || payload.permissions.includes('admin')) {
-      return next()
+    const user = await User.findById(payload.id).select('-password').lean().exec()
+
+    // @ts-ignore
+    const hasPermissions = user.permissions.some(permission => ['ADMIN'].includes(permission))
+
+    if (!hasPermissions) {
+      throw new Error('Not enough permissions')
     }
+
+    next()
   } catch (err) {
-    // res.status(403).json({
-    //   success: false,
-    //   error: 'Forbidden',
-    // })
-    err.statusCode = 403
+    res.status(403).json({
+      success: false,
+      error: err.message,
+    })
+    // err.statusCode = 403
     // err.message = 'Forbidden'
-    next(err)
+    // next(err)
   }
 }
+
+export const hasPermission = (user: any, permissionsNeeded: string[]) => {
+  const matchedPermissions = user.permissions.filter((permissionTheyHave: string) =>
+    permissionsNeeded.includes(permissionTheyHave),
+  )
+
+  if (!matchedPermissions.length) {
+    throw new Error(`Insufficient permissions
+      : ${permissionsNeeded}
+      Current:
+      ${user.permissions}
+      `)
+  }
+}
+
+// const ownsItem = item.user.id === ctx.request.userId
+// const hasPermissions = ctx.request.user.permissions.some(permission =>
+//   ['ADMIN', 'ITEMDELETE'].includes(permission),
+// )
+
+// if (!ownsItem && !hasPermissions) {
+//   throw new Error("You don't have permission to do that!")
+// }
