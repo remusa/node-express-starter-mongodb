@@ -38,16 +38,13 @@ app.use(
   cors({
     origin: CORS_WHITELIST,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    // allowedHeaders: ''
-    // credentials: ''
-    // maxAge: ''
+    allowedHeaders: 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept',
+    credentials: true,
+    maxAge: 86400,
     preflightContinue: false,
     optionsSuccessStatus: 204,
   }),
 )
-
-// Logging
-app.use(morgan('dev'))
 
 // Parsing
 app.use(json()) // body-parser
