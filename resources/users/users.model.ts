@@ -15,6 +15,8 @@ export interface IUser extends Document {
   username?: string
   permissions?: string[]
   checkPassword: (password: string) => boolean
+  hasPermissions: () => boolean
+  isAdmin: () => boolean
 }
 
 const UserSchema: Schema = new Schema(
@@ -74,6 +76,24 @@ UserSchema.methods.checkPassword = async function (password: string) {
   const match = await bcrypt.compare(password, passwordHash)
 
   return match
+}
+
+UserSchema.methods.hasPermissions = async function (permissionsNeeded: string[]) {
+  const userPermissions = this.get('permissions')
+
+  const matchedPermissions = await userPermissions.filter((permissionTheyHave: string) =>
+    permissionsNeeded.includes(permissionTheyHave),
+  )
+
+  return matchedPermissions.length > 0
+}
+
+UserSchema.methods.isAdmin = async function () {
+  const userPermissions = this.get('permissions')
+
+  const isAdmin = userPermissions.includes('ADMIN')
+
+  return isAdmin
 }
 
 export const User: Model<IUser> = model('User', UserSchema)

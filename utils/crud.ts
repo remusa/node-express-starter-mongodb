@@ -5,13 +5,6 @@ import { Error, Model } from 'mongoose'
 // @route GET /api/v1/resource
 // @access Public
 const getMany = (model: Model<any>) => async (req: Request, res: Response) => {
-  console.log('Current User: ', req.user)
-  // @ts-ignore
-  // const user = await User.findById(req.user.id).select('-password').lean().exec()
-  // @ts-ignore
-  // const hasPermissions = user.permissions.some(permission => ['ADMIN'].includes(permission))
-  // if (!hasPermissions) throw new Error('Not enough permissions')
-
   await model
     .find()
     .lean()
@@ -45,8 +38,8 @@ const getOne = (model: Model<any>) => async (req: Request, res: Response) => {
     .findById(id)
     .lean()
     .exec()
-    .then(user => {
-      if (!user) {
+    .then(doc => {
+      if (!doc) {
         return res.status(404).json({
           success: false,
           error: 'Resource not found',
@@ -55,7 +48,7 @@ const getOne = (model: Model<any>) => async (req: Request, res: Response) => {
 
       return res.status(200).json({
         success: true,
-        data: user,
+        data: doc,
       })
     })
     .catch(err => {
@@ -160,7 +153,7 @@ const updateOne = (model: Model<any>) => async (req: Request, res: Response) => 
     const updatedDoc = await model
       .findOneAndUpdate(
         {
-          _id: req.params.id,
+          _id: id,
         },
         updatedValues,
         { new: true },

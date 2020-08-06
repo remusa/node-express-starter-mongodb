@@ -127,13 +127,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   const error = { success: false, error: 'Invalid credentials' }
 
   try {
-    const user = await User.findOne({ email }).select('email password').exec()
+    const user = await User.findOne({ email }).select('email password username').exec()
 
     if (!user) {
       return res.status(401).json(error)
     }
 
-    const match = await user.checkPassword(password)
+    const match = user.checkPassword(password)
 
     if (!match) {
       return res.status(401).json(error)
@@ -204,12 +204,12 @@ export const ensureAdmin = async (req: Request, res: Response, next: NextFunctio
     const payload = await verify(bearer)
 
     // @ts-ignore
-    const user = await User.findById(payload.id).select('-password').lean().exec()
+    const user = await User.findById(payload.id).select('-password').exec()
 
     // @ts-ignore
-    const hasPermissions = user.permissions.some(permission => ['ADMIN'].includes(permission))
+    const isAdmin = await user.isAdmin()
 
-    if (!hasPermissions) {
+    if (!isAdmin) {
       throw new Error('Not enough permissions')
     }
 
@@ -219,22 +219,6 @@ export const ensureAdmin = async (req: Request, res: Response, next: NextFunctio
       success: false,
       error: err.message,
     })
-    // err.statusCode = 401
-    // next(err)
-  }
-}
-
-export const hasPermission = (user: any, permissionsNeeded: string[]) => {
-  const matchedPermissions = user.permissions.filter((permissionTheyHave: string) =>
-    permissionsNeeded.includes(permissionTheyHave),
-  )
-
-  if (!matchedPermissions.length) {
-    throw new Error(`Insufficient permissions
-      : ${permissionsNeeded}
-      Current:
-      ${user.permissions}
-      `)
   }
 }
 

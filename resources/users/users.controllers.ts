@@ -22,6 +22,12 @@ export const updateMe = () => async (req: Request, res: Response, next: NextFunc
   try {
     const id = req.user
     const updatedValues = req.body
+    // Can't update permissions
+    delete updatedValues['permissions']
+
+    if (!id) {
+      throw new Error("User id doesn't exist")
+    }
 
     const user = await User.findOneAndUpdate(id, updatedValues, { new: true }).lean().exec()
 
