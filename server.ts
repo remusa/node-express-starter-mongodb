@@ -1,14 +1,15 @@
+import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import express, { json, Request, Response, urlencoded, NextFunction } from 'express'
-import cookieParser from 'cookie-parser'
+import express, { json, NextFunction, Request, Response, urlencoded } from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import path from 'path'
 import connectDB from './config/db'
 import storesRouter from './resources/stores/stores.router'
 import usersRouter from './resources/users/users.router'
-import { login, ensureUser, register, validate, validateRegister, ensureAdmin } from './utils/auth'
+import { ensureAdmin, ensureUser, login, register, validate, validateRegister } from './utils/auth'
+import middleware from './utils/middleware'
 
 dotenv.config({
   path: './config/.env.dev',
@@ -26,6 +27,10 @@ connectDB(DB_URL)
 // Express
 const app: express.Application = express()
 
+// Logging
+app.use(middleware.logger)
+app.use(morgan('dev'))
+
 // Security
 app.disable('x-powered-by')
 app.use(helmet())
@@ -33,16 +38,13 @@ app.use(
   cors({
     origin: CORS_WHITELIST,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    // allowedHeaders: ''
-    // credentials: ''
-    // maxAge: ''
+    allowedHeaders: 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept',
+    credentials: true,
+    maxAge: 86400,
     preflightContinue: false,
     optionsSuccessStatus: 204,
   }),
 )
-
-// Logging
-app.use(morgan('dev'))
 
 // Parsing
 app.use(json()) // body-parser
