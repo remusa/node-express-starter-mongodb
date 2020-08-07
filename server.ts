@@ -22,6 +22,7 @@ import {
   logout,
 } from './utils/auth'
 import middleware from './utils/middleware'
+import ErrorResponse from './utils/error'
 
 dotenv.config({
   path: './config/.env',
@@ -108,23 +109,15 @@ app.use('/api/v1/admin', ensureAdmin, (req: Request, res: Response, next: NextFu
   })
 })
 
-// catch 404 and forward to error handler
+// Catch 404 and forward to error handler
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const err = new Error('Not Found')
-  // @ts-ignore
-  err.status = 404
+  const err = new ErrorResponse('Not Found', 404)
+
   return next(err)
 })
 
-// error handlers
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  res.status(err.status || 500)
-
-  return res.json({
-    success: false,
-    error: err.message,
-  })
-})
+// Error handler
+app.use(middleware.errorHandler)
 
 // Server
 app.listen(PORT, () => console.log(`⚡️[🚀]: Server running in ${ENV} mode on port ${PORT}`))
