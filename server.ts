@@ -9,7 +9,15 @@ import connectDB from './config/db'
 import postsRouter from './resources/posts/posts.router'
 import storesRouter from './resources/stores/stores.router'
 import usersRouter from './resources/users/users.router'
-import { ensureAdmin, ensureUser, login, register, validate, validateRegister } from './utils/auth'
+import {
+  ensureAdmin,
+  ensureUser,
+  login,
+  register,
+  validate,
+  validateRegister,
+  logout,
+} from './utils/auth'
 import middleware from './utils/middleware'
 
 dotenv.config({
@@ -65,6 +73,7 @@ app.get('/add', (req: Request, res: Response) => res.sendFile(publicFile('add.ht
 // Auth routes
 app.post('/auth/register', validateRegister, register)
 app.post('/auth/login', validate, login)
+app.get('/auth/logout', logout)
 
 // API routes
 app.use('/api', ensureUser)
