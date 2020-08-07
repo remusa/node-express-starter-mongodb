@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { Store } from './stores.model'
+import { crudControllers } from '../../utils/crud'
 
 // @desc Get all stores
 // @route GET /api/v1/stores
@@ -47,4 +48,10 @@ const postStore = () => async (req: Request, res: Response, next: NextFunction) 
   }
 }
 
-export { getStores, postStore }
+const storeControllers = crudControllers(Store)
+
+export default {
+  ...storeControllers,
+  getStores,
+  postStore,
+}
