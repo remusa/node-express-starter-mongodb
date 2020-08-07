@@ -8,7 +8,7 @@ import { check, validationResult } from 'express-validator'
 const Strategy = require('passport-local').Strategy
 
 dotenv.config({
-  path: '../config/.env.dev',
+  path: __dirname + './../config/.env',
 })
 
 const JWT_SECRET = process.env.JWT_SECRET || ''

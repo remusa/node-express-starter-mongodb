@@ -2,7 +2,7 @@ import NodeGeocoder from 'node-geocoder'
 import dotenv from 'dotenv'
 
 dotenv.config({
-  path: './config/.env.dev',
+  path: './config/.env',
 })
 
 const GEOCODER_PROVIDER = process.env.GEOCODER_PROVIDER
