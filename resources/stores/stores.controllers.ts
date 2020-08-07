@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { Store } from './stores.model'
 import { crudControllers } from '../../utils/crud'
+import ErrorResponse from '../../utils/error'
 
 // @desc Get all stores
 // @route GET /api/v1/stores
@@ -16,9 +17,8 @@ const getStores = () => async (req: Request, res: Response, next: NextFunction) 
     })
   } catch (err) {
     console.error(`Error getting stores: ${err.message}`)
-    res.status(500).json({
-      error: 'Server error',
-    })
+
+    next(err)
   }
 }
 
@@ -36,15 +36,7 @@ const postStore = () => async (req: Request, res: Response, next: NextFunction) 
   } catch (err) {
     console.error(`Error posting store: ${err.message}`)
 
-    if (err.code === 11000) {
-      return res.status(400).json({
-        error: 'Store already exists',
-      })
-    }
-
-    res.status(500).json({
-      error: `Server error: ${err.message}`,
-    })
+    next(err)
   }
 }
 

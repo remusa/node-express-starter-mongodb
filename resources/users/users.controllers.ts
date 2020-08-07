@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express'
 import { Error } from 'mongoose'
 import { crudControllers } from '../../utils/crud'
 import { User } from './users.model'
+import ErrorResponse from '../../utils/error'
 
 // @desc Get info about current user
 // @route GET /api/v1/me
@@ -27,10 +28,18 @@ const updateMe = () => async (req: Request, res: Response, next: NextFunction) =
     delete updatedValues['permissions']
 
     if (!id) {
-      throw new Error("User id doesn't exist")
+      next(new ErrorResponse("User id doesn't exist", 400))
     }
 
-    const user = await User.findOneAndUpdate(id, updatedValues, { new: true }).lean().exec()
+    const user = await User.findOneAndUpdate(
+      {
+        _id: id,
+      },
+      updatedValues,
+      { new: true },
+    )
+      .lean()
+      .exec()
 
     return res.status(200).json({
       success: true,
@@ -40,15 +49,7 @@ const updateMe = () => async (req: Request, res: Response, next: NextFunction) =
   } catch (err) {
     console.error(`Error updating user: ${err.message}`)
 
-    if (err instanceof Error.CastError) {
-      return res.status(400).json({
-        error: 'User id is invalid',
-      })
-    }
-
-    res.status(500).json({
-      error: `Server error: ${err.message}`,
-    })
+    next(err)
   }
 }
 
