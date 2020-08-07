@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
-import { Post } from './posts.model'
 import { crudControllers } from '../../utils/crud'
+import { Post } from './posts.model'
+import ErrorResponse from '../../utils/error'
 
 // @desc Get all posts
 // @route GET /api/v1/posts
@@ -17,9 +18,8 @@ const getPosts = () => async (req: Request, res: Response, next: NextFunction) =
     })
   } catch (err) {
     console.error(`Error getting posts: ${err.message}`)
-    res.status(500).json({
-      error: 'Server error',
-    })
+
+    next(err)
   }
 }
 
@@ -40,15 +40,7 @@ const createPost = () => async (req: Request, res: Response, next: NextFunction)
   } catch (err) {
     console.error(`Error posting post: ${err.message}`)
 
-    if (err.code === 11000) {
-      return res.status(400).json({
-        error: 'Post already exists',
-      })
-    }
-
-    res.status(500).json({
-      error: `Server error: ${err.message}`,
-    })
+    next(err)
   }
 }
 
