@@ -1,10 +1,9 @@
 import dotenv from 'dotenv'
 import { NextFunction, Request, Response } from 'express'
+import { check, validationResult } from 'express-validator'
 import jwt from 'jsonwebtoken'
 import passport from 'passport'
 import { User } from '../resources/users/users.model'
-import { check, validationResult } from 'express-validator'
-import { Store } from '../resources/stores/stores.model'
 
 const Strategy = require('passport-local').Strategy
 

@@ -1,7 +1,7 @@
 import { Router } from 'express'
+import { ensureOwnerOrAdmin } from '../../utils/auth'
 import middleware from '../../utils/middleware'
 import controller from './posts.controllers'
-import { ensureOwnerOrAdmin } from '../../utils/auth'
 import { Post } from './posts.model'
 
 const router: Router = Router()
