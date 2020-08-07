@@ -4,6 +4,7 @@ import { check, validationResult } from 'express-validator'
 import jwt from 'jsonwebtoken'
 import passport from 'passport'
 import { User } from '../resources/users/users.model'
+import ErrorResponse from './error'
 
 const Strategy = require('passport-local').Strategy
 
@@ -91,7 +92,8 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
   const errors = validationResult(req)
 
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() })
+    const validationErrors = errors.array().map(e => e.msg)
+    return next(new ErrorResponse('ValidationError', 400, validationErrors))
   }
 
   const { email, password, username } = req.body
@@ -100,17 +102,11 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     const user = await User.create({ email, password, username })
     const token = await sign(user)
 
-    return res.status(201).json({ success: true, user, token })
+    return res.status(201).json({ success: true, data: { user, token } })
   } catch (err) {
     console.error(`Error signing up: ${err.message}`)
 
-    if (err.code === 11000) {
-      return res.status(400).json({ success: false, error: 'Email already exists' })
-    }
-
-    return res.status(500).json({
-      error: err.message,
-    })
+    next(err)
   }
 }
 
@@ -118,38 +114,34 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   const errors = validationResult(req)
 
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() })
+    const validationErrors = errors.array().map(e => e.msg)
+    return next(new ErrorResponse('ValidationError', 400, validationErrors))
   }
 
   const { email, password } = req.body
-
-  const error = { success: false, error: 'Invalid credentials' }
 
   try {
     const user = await User.findOne({ email }).select('email password username').exec()
 
     if (!user) {
-      return res.status(401).json(error)
+      return next(new ErrorResponse('Invalid credentials', 401))
     }
 
     const match = user.checkPassword(password)
 
     if (!match) {
-      return res.status(401).json(error)
+      return next(new ErrorResponse('Invalid credentials', 401))
     }
 
     const token = await sign(user)
 
     res.cookie('jwt', token, { httpOnly: true, maxAge: COOKIE_MAX_AGE })
 
-    return res.status(201).json({ success: true, user, token })
+    return res.status(201).json({ success: true, data: { user, token } })
   } catch (err) {
     console.error(`Error logging in: ${err.message}`)
 
-    return res.status(500).json({
-      success: false,
-      error: err.message,
-    })
+    next(err)
   }
 }
 
@@ -164,10 +156,7 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
   } catch (err) {
     console.error(`Error logging in: ${err.message}`)
 
-    return res.status(500).json({
-      success: false,
-      error: err.message,
-    })
+    next(err)
   }
 }
 
@@ -176,11 +165,7 @@ export const ensureUser = async (req: Request, res: Response, next: NextFunction
   const bearer = req.headers.authorization || req.cookies.jwt
 
   if (!bearer) {
-    //  || !bearer.startsWith('Bearer ')
-    return res.status(401).json({
-      success: false,
-      error: 'No authorization token',
-    })
+    return next(new ErrorResponse('No authorization token', 401))
   }
 
   let payload
@@ -188,22 +173,14 @@ export const ensureUser = async (req: Request, res: Response, next: NextFunction
   try {
     payload = await verify(bearer)
   } catch (err) {
-    console.error(`Unauthorized (invalid token): ${err.message}`)
-
-    return res.status(401).json({
-      success: false,
-      error: err.message,
-    })
+    next(new ErrorResponse(`Unauthorized (invalid token): ${err.message}`, 401))
   }
 
   // @ts-ignore
   const user = await User.findById(payload.id).select('-password').lean().exec()
 
   if (!user) {
-    return res.status(401).json({
-      success: false,
-      error: 'Invalid credentials',
-    })
+    return next(new ErrorResponse('Invalid credentials', 401))
   }
 
   // @ts-ignore
@@ -226,15 +203,12 @@ export const ensureAdmin = async (req: Request, res: Response, next: NextFunctio
     const isAdmin = await user.isAdmin()
 
     if (!isAdmin) {
-      throw new Error('Not enough permissions')
+      next(new ErrorResponse('Not enough permissions', 401))
     }
 
     next()
   } catch (err) {
-    res.status(401).json({
-      success: false,
-      error: err.message,
-    })
+    next(err)
   }
 }
 
@@ -251,18 +225,19 @@ export const ensureOwnerOrAdmin = async (req: Request, res: Response, next: Next
 
     const resource = await model.findById(resourceId).select('createdBy').lean().exec()
 
+    if (!resource) {
+      return next(new ErrorResponse('Resource not found', 404))
+    }
+
     // @ts-ignore
     const isOwner = user._id.toString() === resource.createdBy.toString()
 
     if (!isOwner && !isAdmin) {
-      throw new Error('Not enough permissions')
+      return next(new ErrorResponse('Not enough permissions', 401))
     }
 
     next()
   } catch (err) {
-    res.status(401).json({
-      success: false,
-      error: err.message,
-    })
+    next(err)
   }
 }
