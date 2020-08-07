@@ -6,7 +6,7 @@ import { User } from './users.model'
 // @desc Get info about current user
 // @route GET /api/v1/me
 // @access Public
-export const getMe = () => async (req: any, res: Response, next: NextFunction) => {
+const getMe = () => async (req: any, res: Response, next: NextFunction) => {
   const me = req.user
 
   return res.status(200).json({
@@ -18,11 +18,12 @@ export const getMe = () => async (req: any, res: Response, next: NextFunction) =
 // @desc Update current user
 // @route PUT /api/v1/me
 // @access Public
-export const updateMe = () => async (req: Request, res: Response, next: NextFunction) => {
+const updateMe = () => async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.user
     const updatedValues = req.body
-    // Can't update permissions
+
+    // User can't update own permissions
     delete updatedValues['permissions']
 
     if (!id) {
