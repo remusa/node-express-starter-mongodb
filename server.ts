@@ -1,16 +1,28 @@
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
+import mongoSanitize from 'express-mongo-sanitize'
 import dotenv from 'dotenv'
 import express, { json, NextFunction, Request, Response, urlencoded } from 'express'
 import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
+import hpp from 'hpp'
 import morgan from 'morgan'
 import path from 'path'
 import connectDB from './config/db'
 import postsRouter from './resources/posts/posts.router'
 import storesRouter from './resources/stores/stores.router'
 import usersRouter from './resources/users/users.router'
-import { ensureAdmin, ensureUser, login, register, validate, validateRegister } from './utils/auth'
+import {
+  ensureAdmin,
+  ensureUser,
+  login,
+  register,
+  validate,
+  validateRegister,
+  logout,
+} from './utils/auth'
 import middleware from './utils/middleware'
+import ErrorResponse from './utils/error'
 
 dotenv.config({
   path: './config/.env',
@@ -32,9 +44,11 @@ const app: express.Application = express()
 app.use(middleware.logger)
 app.use(morgan('dev'))
 
-// Security
+// Security headers
 app.disable('x-powered-by')
 app.use(helmet())
+
+// CORS
 app.use(
   cors({
     origin: CORS_WHITELIST,
@@ -46,6 +60,20 @@ app.use(
     optionsSuccessStatus: 204,
   }),
 )
+
+// Sanitize data
+app.use(mongoSanitize())
+
+// Rate limiting
+app.use(
+  rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 mins
+    max: 100,
+  }),
+)
+
+// HTTP param pollution
+app.use(hpp())
 
 // Parsing
 app.use(json()) // body-parser
@@ -65,6 +93,7 @@ app.get('/add', (req: Request, res: Response) => res.sendFile(publicFile('add.ht
 // Auth routes
 app.post('/auth/register', validateRegister, register)
 app.post('/auth/login', validate, login)
+app.get('/auth/logout', logout)
 
 // API routes
 app.use('/api', ensureUser)
@@ -80,23 +109,15 @@ app.use('/api/v1/admin', ensureAdmin, (req: Request, res: Response, next: NextFu
   })
 })
 
-// catch 404 and forward to error handler
+// Catch 404 and forward to error handler
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const err = new Error('Not Found')
-  // @ts-ignore
-  err.status = 404
+  const err = new ErrorResponse('Not Found', 404)
+
   return next(err)
 })
 
-// error handlers
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  res.status(err.status || 500)
-
-  return res.json({
-    success: false,
-    error: err.message,
-  })
-})
+// Error handler
+app.use(middleware.errorHandler)
 
 // Server
 app.listen(PORT, () => console.log(`⚡️[🚀]: Server running in ${ENV} mode on port ${PORT}`))

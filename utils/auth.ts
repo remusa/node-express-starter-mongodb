@@ -153,6 +153,24 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   }
 }
 
+export const logout = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.cookie('jwt', 'none', {
+      expires: new Date(Date.now() + 10 * 1000),
+      httpOnly: true,
+    })
+
+    return res.status(201).json({ success: true, user: {} })
+  } catch (err) {
+    console.error(`Error logging in: ${err.message}`)
+
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+    })
+  }
+}
+
 export const ensureUser = async (req: Request, res: Response, next: NextFunction) => {
   // @ts-ignore
   const bearer = req.headers.authorization || req.cookies.jwt

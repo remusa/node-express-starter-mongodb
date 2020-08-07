@@ -2,7 +2,7 @@ import { newToken, verifyToken, signup, signin, protect } from '../auth'
 import mongoose from 'mongoose'
 import jwt from 'jsonwebtoken'
 import config from '../../config'
-import { User } from '../../resources/users/user.model'
+import { User } from '../../resources/users/users.model'
 
 describe('Authentication:', () => {
   describe('newToken', () => {

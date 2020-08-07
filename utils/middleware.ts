@@ -32,10 +32,20 @@ const setModel = (model: any) => (req: Request, res: Response, next: NextFunctio
   next()
 }
 
+const errorHandler = (err: Error | any, req: Request, res: Response, next: NextFunction) => {
+  console.log(err.stack.red)
+
+  return res.status(err.status || 500).json({
+    success: false,
+    error: err.message || 'Server Error',
+  })
+}
+
 export default {
   logger: logger(),
   validateObjectId,
   setModel,
+  errorHandler,
   // notFound,
   // handleError,
   // handleValidationError,

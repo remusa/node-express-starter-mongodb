@@ -4,7 +4,7 @@ module.exports = {
   env: {
     browser: true,
   },
-  // parser: 'babel-eslint',
+  parser: 'babel-eslint',
   rules: {
     'babel/camelcase': 'off',
     'babel/quotes': 'off',
