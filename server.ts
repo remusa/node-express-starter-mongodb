@@ -4,6 +4,8 @@ import mongoSanitize from 'express-mongo-sanitize'
 import dotenv from 'dotenv'
 import express, { json, NextFunction, Request, Response, urlencoded } from 'express'
 import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
+import hpp from 'hpp'
 import morgan from 'morgan'
 import path from 'path'
 import connectDB from './config/db'
@@ -41,9 +43,11 @@ const app: express.Application = express()
 app.use(middleware.logger)
 app.use(morgan('dev'))
 
-// Security
+// Security headers
 app.disable('x-powered-by')
 app.use(helmet())
+
+// CORS
 app.use(
   cors({
     origin: CORS_WHITELIST,
@@ -55,7 +59,20 @@ app.use(
     optionsSuccessStatus: 204,
   }),
 )
+
+// Sanitize data
 app.use(mongoSanitize())
+
+// Rate limiting
+app.use(
+  rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 mins
+    max: 100,
+  }),
+)
+
+// HTTP param pollution
+app.use(hpp())
 
 // Parsing
 app.use(json()) // body-parser
