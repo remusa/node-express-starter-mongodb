@@ -7,7 +7,8 @@
   "author": "",
   "license": "ISC",
   "scripts": {
-    "start": "cross-env NODE_ENV=production node server.ts",
+    "start": "cross-env NODE_ENV=production pm2 start dist/server.js",
+    "stop": "pm2 start dist/server.js",
     "build": "tsc --project ./",
     "dev": "npm-run-all --parallel dev:*",
     "dev:server": "cross-env NODE_ENV=development tsnd --respawn server.ts",
@@ -44,6 +45,7 @@
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
     "pino-noir": "^2.2.1",
+    "pm2": "^4.4.0",
     "validator": "^13.1.1"
   },
   "devDependencies": {
