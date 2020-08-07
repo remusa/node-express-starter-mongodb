@@ -1,14 +1,14 @@
 import dotenv from 'dotenv'
 import { NextFunction, Request, Response } from 'express'
+import { check, validationResult } from 'express-validator'
 import jwt from 'jsonwebtoken'
 import passport from 'passport'
 import { User } from '../resources/users/users.model'
-import { check, validationResult } from 'express-validator'
 
 const Strategy = require('passport-local').Strategy
 
 dotenv.config({
-  path: '../config/.env.dev',
+  path: __dirname + './../config/.env',
 })
 
 const JWT_SECRET = process.env.JWT_SECRET || ''
@@ -22,15 +22,12 @@ const adminPassword = process.env.ADMIN_PASSWORD || 'iamthewalrus'
 // passport.use(adminStrategy())
 const authenticate = passport.authenticate('local', { session: false })
 
-// const sign = async (user: any) => {
 const sign = async (user: any) => {
-  // const token = await jwt.sign({ id: user._id }, JWT_SECRET, jwtOptions)
   const token = await jwt.sign({ id: user._id }, JWT_SECRET, jwtOptions)
   return token
 }
 
 const verify = async (jwtString: string) => {
-  // const token = jwtString.split('Bearer ')[1].trim()
   const token = jwtString
     .replace(/^Bearer /i, '')
     .replace(/^jwt= /i, '')
@@ -92,6 +89,7 @@ export const validateRegister = [
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req)
+
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() })
   }
@@ -118,6 +116,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req)
+
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() })
   }
@@ -179,7 +178,6 @@ export const ensureUser = async (req: Request, res: Response, next: NextFunction
     })
   }
 
-  // TODO: remove @ts-ignore
   // @ts-ignore
   const user = await User.findById(payload.id).select('-password').lean().exec()
 
@@ -222,11 +220,31 @@ export const ensureAdmin = async (req: Request, res: Response, next: NextFunctio
   }
 }
 
-// const ownsItem = item.user.id === ctx.request.userId
-// const hasPermissions = ctx.request.user.permissions.some(permission =>
-//   ['ADMIN', 'ITEMDELETE'].includes(permission),
-// )
+export const ensureOwnerOrAdmin = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // @ts-ignore
+    const user = req.user
+    // @ts-ignore
+    const model = req.model
+    const resourceId = req.params.id
 
-// if (!ownsItem && !hasPermissions) {
-//   throw new Error("You don't have permission to do that!")
-// }
+    // @ts-ignore
+    const isAdmin = user.permissions.includes('ADMIN')
+
+    const resource = await model.findById(resourceId).select('createdBy').lean().exec()
+
+    // @ts-ignore
+    const isOwner = user._id.toString() === resource.createdBy.toString()
+
+    if (!isOwner && !isAdmin) {
+      throw new Error('Not enough permissions')
+    }
+
+    next()
+  } catch (err) {
+    res.status(401).json({
+      success: false,
+      error: err.message,
+    })
+  }
+}

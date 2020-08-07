@@ -4,15 +4,14 @@ module.exports = {
   env: {
     browser: true,
   },
+  // parser: 'babel-eslint',
   rules: {
     'babel/camelcase': 'off',
     'babel/quotes': 'off',
     'consistent-return': 'off',
     'import/no-unresolved': 'off',
     'import/order': 'off',
-    'jsx-a11y/label-has-for': 'off',
     'max-lines-per-function': 'off',
-    '@typescript-eslint/no-var-requires': 0,
   },
   overrides: [
     {
@@ -27,6 +26,10 @@ module.exports = {
         'plugin:@typescript-eslint/recommended',
         'eslint-config-prettier/@typescript-eslint',
       ],
+      rules: {
+        '@typescript-eslint/no-var-requires': 1,
+        '@typescript-eslint/ban-ts-comment': 1,
+      },
     },
   ],
 }

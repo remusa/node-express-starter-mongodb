@@ -1,23 +1,24 @@
-import { Model, model, Schema } from 'mongoose'
+import { Model, model, Schema, Document } from 'mongoose'
 
 export interface IPost extends Document {
-  user: any
   title: string
-  text: string
+  content: string
+  createdBy: any
 }
 
 const PostSchema = new Schema(
   {
-    user: {
-      type: Schema.Types.ObjectId,
-    },
     title: {
       type: String,
       required: true,
     },
-    text: {
+    content: {
       type: String,
       required: true,
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
     },
   },
   {

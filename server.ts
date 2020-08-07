@@ -6,13 +6,14 @@ import helmet from 'helmet'
 import morgan from 'morgan'
 import path from 'path'
 import connectDB from './config/db'
+import postsRouter from './resources/posts/posts.router'
 import storesRouter from './resources/stores/stores.router'
 import usersRouter from './resources/users/users.router'
 import { ensureAdmin, ensureUser, login, register, validate, validateRegister } from './utils/auth'
 import middleware from './utils/middleware'
 
 dotenv.config({
-  path: './config/.env.dev',
+  path: './config/.env',
 })
 
 const PORT = process.env.PORT || 8000
@@ -68,6 +69,7 @@ app.post('/auth/login', validate, login)
 // API routes
 app.use('/api', ensureUser)
 app.use('/api/v1/stores', storesRouter)
+app.use('/api/v1/posts', postsRouter)
 app.use('/api/v1/users', usersRouter)
 
 // Admin routes
@@ -75,6 +77,24 @@ app.use('/api/v1/admin', ensureAdmin, (req: Request, res: Response, next: NextFu
   res.status(200).json({
     success: true,
     messagge: 'Admin privileges',
+  })
+})
+
+// catch 404 and forward to error handler
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const err = new Error('Not Found')
+  // @ts-ignore
+  err.status = 404
+  return next(err)
+})
+
+// error handlers
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  res.status(err.status || 500)
+
+  return res.json({
+    success: false,
+    error: err.message,
   })
 })
 

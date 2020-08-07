@@ -1,0 +1,23 @@
+GET http://localhost:8000/api/v1/stores HTTP/1.1
+
+###
+
+POST http://localhost:8000/api/v1/stores HTTP/1.1
+Content-Type: application/json
+
+{
+	"storeId": "0001",
+	"address": "10 Main St. Haverhill MA"
+}
+
+###
+
+POST http://localhost:8000/api/v1/stores HTTP/1.1
+Content-Type: application/json
+
+{
+	"storeId": "0002",
+	"address": "10 Main St. Lawrence MA"
+}
+
+###
