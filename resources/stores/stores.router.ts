@@ -1,5 +1,4 @@
 import { Router } from 'express'
-import { getStores, postStore } from './stores.controllers'
 import middleware from '../../utils/middleware'
 import controller from './stores.controllers'
 

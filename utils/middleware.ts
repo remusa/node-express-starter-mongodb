@@ -35,6 +35,7 @@ const setModel = (model: any) => (req: Request, res: Response, next: NextFunctio
 export default {
   logger: logger(),
   validateObjectId,
+  setModel,
   // notFound,
   // handleError,
   // handleValidationError,

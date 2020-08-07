@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import controller from './users.controllers'
 import { ensureAdmin } from '../../utils/auth'
+import middleware from '../../utils/middleware'
 
 const router: Router = Router()
 
