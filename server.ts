@@ -1,5 +1,6 @@
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
+import mongoSanitize from 'express-mongo-sanitize'
 import dotenv from 'dotenv'
 import express, { json, NextFunction, Request, Response, urlencoded } from 'express'
 import helmet from 'helmet'
@@ -54,6 +55,7 @@ app.use(
     optionsSuccessStatus: 204,
   }),
 )
+app.use(mongoSanitize())
 
 // Parsing
 app.use(json()) // body-parser
