@@ -4,6 +4,7 @@ import pinoLogger from 'express-pino-logger'
 import { STATUS_CODES } from 'http'
 import mongoose, { Model } from 'mongoose'
 import { Request, Response, NextFunction } from 'express'
+import ErrorResponse from './error'
 
 function logger() {
   return pinoLogger({
@@ -19,7 +20,7 @@ const validateObjectId = (req: Request, res: Response, next: NextFunction) => {
   const idToCheck = req.params.id
 
   if (!mongoose.Types.ObjectId.isValid(idToCheck)) {
-    return res.status(404).send({ success: false, error: 'Invalid resource id' })
+    return next(new ErrorResponse(`Invalid resource id: ${req.params.id}`, 404))
   }
 
   next()
@@ -32,12 +33,41 @@ const setModel = (model: any) => (req: Request, res: Response, next: NextFunctio
   next()
 }
 
-const errorHandler = (err: Error | any, req: Request, res: Response, next: NextFunction) => {
-  console.log(err.stack.red)
+const asyncHandler = (fn: any) => (req: Request, res: Response, next: NextFunction) => {
+  return Promise.resolve(fn(req, res, next)).catch(next)
+}
 
-  return res.status(err.status || 500).json({
+const errorHandler = (
+  err: Error | ErrorResponse | any,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  let error = { ...err, status: err.status, message: err.message }
+  console.error('errorHandler | error', error)
+
+  // Mongoose invalid ObjectId
+  if (error.name === 'CastError') {
+    error = new ErrorResponse(`Resource '${Object.values(error.keyValue)}' not found`, 404)
+  }
+  // Mongoose resource already exists
+  if (error.code === 11000) {
+    error = new ErrorResponse(`Resource '${Object.values(error.keyValue)}' already exists`, 400)
+  }
+  // Validation errors
+  if (err.name === 'ValidationError') {
+    // @ts-ignore
+    const message: string = Object.values(err.errors).reduce((acc, curr) => curr.message, '')
+    error = new ErrorResponse(message, 400)
+  }
+  // Express validator errors
+  if (error.message === 'ValidationError') {
+    error.message = error.errors.length === 1 ? error.errors[0] : error.errors
+  }
+
+  return res.status(error.status || 500).json({
     success: false,
-    error: err.message || 'Server Error',
+    error: error.message || 'Server Error',
   })
 }
 
@@ -45,6 +75,7 @@ export default {
   logger: logger(),
   validateObjectId,
   setModel,
+  asyncHandler,
   errorHandler,
   // notFound,
   // handleError,
