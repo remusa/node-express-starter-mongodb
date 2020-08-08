@@ -1,9 +1,8 @@
 // @ts-ignore
-import pinoNoir from 'pino-noir'
+import { NextFunction, Request, Response } from 'express'
 import pinoLogger from 'express-pino-logger'
-import { STATUS_CODES } from 'http'
-import mongoose, { Model } from 'mongoose'
-import { Request, Response, NextFunction } from 'express'
+import mongoose from 'mongoose'
+import pinoNoir from 'pino-noir'
 import ErrorResponse from './error'
 
 function logger() {
@@ -77,7 +76,4 @@ export default {
   setModel,
   asyncHandler,
   errorHandler,
-  // notFound,
-  // handleError,
-  // handleValidationError,
 }

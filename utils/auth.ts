@@ -12,7 +12,7 @@ dotenv.config({
   path: __dirname + './../config/.env',
 })
 
-const JWT_SECRET = process.env.JWT_SECRET || ''
+export const JWT_SECRET = process.env.JWT_SECRET || ''
 const jwtOptions: jwt.SignOptions = {
   algorithm: 'HS256',
   expiresIn: '100d',
@@ -23,12 +23,12 @@ const adminPassword = process.env.ADMIN_PASSWORD || 'iamthewalrus'
 // passport.use(adminStrategy())
 const authenticate = passport.authenticate('local', { session: false })
 
-const sign = async (user: any) => {
+export const sign = async (user: any) => {
   const token = await jwt.sign({ id: user._id }, JWT_SECRET, jwtOptions)
   return token
 }
 
-const verify = async (jwtString: string) => {
+export const verify = async (jwtString: string) => {
   const token = jwtString
     .replace(/^Bearer /i, '')
     .replace(/^jwt= /i, '')
@@ -190,14 +190,9 @@ export const ensureUser = async (req: Request, res: Response, next: NextFunction
 }
 
 export const ensureAdmin = async (req: Request, res: Response, next: NextFunction) => {
-  // @ts-ignore
-  const bearer = req.headers.authorization || req.cookies.jwt
-
   try {
-    const payload = await verify(bearer)
-
     // @ts-ignore
-    const user = await User.findById(payload.id).select('-password').exec()
+    const user = await User.findById(req.user._id).select('-password').exec()
 
     // @ts-ignore
     const isAdmin = await user.isAdmin()
@@ -205,6 +200,9 @@ export const ensureAdmin = async (req: Request, res: Response, next: NextFunctio
     if (!isAdmin) {
       next(new ErrorResponse('Not enough permissions', 401))
     }
+
+    // @ts-ignore
+    req.user.isAdmin = true
 
     next()
   } catch (err) {
