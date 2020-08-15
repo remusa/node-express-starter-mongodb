@@ -2,6 +2,7 @@
 import { NextFunction, Request, Response } from 'express'
 import pinoLogger from 'express-pino-logger'
 import mongoose from 'mongoose'
+// @ts-ignore
 import pinoNoir from 'pino-noir'
 import ErrorResponse from './error'
 
@@ -43,7 +44,7 @@ const errorHandler = (
   next: NextFunction,
 ) => {
   let error = { ...err, status: err.status, message: err.message }
-  console.error('errorHandler | error', error)
+  // console.error('errorHandler | error', error)
 
   // Mongoose invalid ObjectId
   if (error.name === 'CastError') {
@@ -56,14 +57,20 @@ const errorHandler = (
   // Validation errors
   if (err.name === 'ValidationError') {
     // @ts-ignore
-    const message: string = Object.values(err.errors).reduce((acc, curr) => curr.message, '')
-    error = new ErrorResponse(message, 400)
+    // const message: string = Object.values(err.errors).reduce((acc, curr) => curr.message, '')
+    // error = new ErrorResponse(message, 400)
+    const message: string = Object.values(err.errors).forEach(({ properties }) => {
+      console.log(properties)
+      error[properties.path] = properties.message
+    })
+    error.status = 400
   }
   // Express validator errors
   if (error.message === 'ValidationError') {
     error.message = error.errors.length === 1 ? error.errors[0] : error.errors
   }
 
+  // console.error('errorHandler | error', error)
   return res.status(error.status || 500).json({
     success: false,
     error: error.message || 'Server Error',

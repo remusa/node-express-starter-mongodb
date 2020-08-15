@@ -2,8 +2,6 @@ import bcrypt from 'bcryptjs'
 import mongoose, { Document, Model, model, Schema } from 'mongoose'
 import validator from 'validator'
 
-const BCRYPT_SALT = bcrypt.genSaltSync(10)
-
 enum PERMISSIONS {
   'ADMIN' = 'ADMIN',
   'BASIC' = 'BASIC',
@@ -63,8 +61,8 @@ UserSchema.pre('save', async function (next: mongoose.HookNextFunction) {
   }
 
   const password = this.get('password')
-
-  const hash = await bcrypt.hash(password, BCRYPT_SALT)
+  const salt = bcrypt.genSaltSync(10)
+  const hash = await bcrypt.hash(password, salt)
   this.set({ password: hash })
 
   next()
@@ -72,7 +70,6 @@ UserSchema.pre('save', async function (next: mongoose.HookNextFunction) {
 
 UserSchema.methods.checkPassword = async function (password: string) {
   const passwordHash = this.get('password')
-
   const match = await bcrypt.compare(password, passwordHash)
 
   return match
@@ -80,7 +77,6 @@ UserSchema.methods.checkPassword = async function (password: string) {
 
 UserSchema.methods.hasPermissions = async function (permissionsNeeded: string[]) {
   const userPermissions = this.get('permissions')
-
   const matchedPermissions = await userPermissions.filter((permissionTheyHave: string) =>
     permissionsNeeded.includes(permissionTheyHave),
   )
@@ -90,7 +86,6 @@ UserSchema.methods.hasPermissions = async function (permissionsNeeded: string[])
 
 UserSchema.methods.isAdmin = async function () {
   const userPermissions = this.get('permissions')
-
   const isAdmin = userPermissions.includes('ADMIN')
 
   return isAdmin

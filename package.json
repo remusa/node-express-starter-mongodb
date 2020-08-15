@@ -39,13 +39,14 @@
     "helmet": "^4.0.0",
     "hpp": "^0.2.3",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.9.27",
+    "mongoose": "^5.9.28",
     "morgan": "^1.10.0",
     "node-geocoder": "^3.27.0",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
     "pino-noir": "^2.2.1",
     "pm2": "^4.4.0",
+    "supertest": "^4.0.2",
     "validator": "^13.1.1"
   },
   "devDependencies": {
@@ -70,7 +71,7 @@
     "@types/hpp": "^0.2.1",
     "@types/jest": "^26.0.9",
     "@types/jsonwebtoken": "^8.5.0",
-    "@types/mongoose": "^5.7.35",
+    "@types/mongoose": "^5.7.36",
     "@types/morgan": "^1.9.1",
     "@types/node": "^14.0.27",
     "@types/node-geocoder": "^3.24.1",
@@ -106,7 +107,7 @@
     "verbose": true,
     "testURL": "http://localhost/",
     "testEnvironment": "node",
-        "restoreMocks": true,
+    "restoreMocks": true,
     "roots": [
       "<rootDir>/"
     ],
