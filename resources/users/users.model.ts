@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs'
 import mongoose, { Document, Model, model, Schema } from 'mongoose'
+import ErrorResponse from 'utils/error'
 import validator from 'validator'
 
 enum PERMISSIONS {
@@ -89,6 +90,24 @@ UserSchema.methods.isAdmin = async function () {
   const isAdmin = userPermissions.includes('ADMIN')
 
   return isAdmin
+}
+
+// NOTE: methods -> instance, statics -> model
+// TODO: switch login to UserSchema statics login
+UserSchema.statics.login = async function (email: string, password: string) {
+  const user = await this.findOne({ email })
+
+  if (!user) {
+    throw new ErrorResponse('Invalid credentials', 401)
+  }
+
+  const match = await bcrypt.compare(password, user.password)
+
+  if (match) {
+    return user
+  }
+
+  throw new ErrorResponse('Invalid credentials', 401)
 }
 
 export const User: Model<IUser> = model('User', UserSchema)
