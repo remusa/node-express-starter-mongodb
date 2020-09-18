@@ -135,7 +135,8 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     const token = await sign(user._id)
 
-    res.cookie('jwt', token, { httpOnly: true, maxAge: COOKIE_MAX_AGE })
+    // res.setHeader('Set-Header', `jwt=${token}`)
+    res.cookie('jwt', token, { httpOnly: true, maxAge: COOKIE_MAX_AGE, secure: true })
 
     return res.status(201).json({ success: true, data: { user, token } })
   } catch (err) {
@@ -151,6 +152,7 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
       expires: new Date(Date.now() + 10 * 1000),
       maxAge: 1,
       httpOnly: true,
+      secure: true,
     })
 
     return res.status(201).json({ success: true, user: {} })
@@ -184,6 +186,7 @@ export const ensureUser = async (req: Request, res: Response, next: NextFunction
     return next(new ErrorResponse('Invalid credentials', 401))
   }
 
+  // TODO: save in locals instead
   // @ts-ignore
   req.user = user
 
