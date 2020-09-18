@@ -58,15 +58,15 @@ const errorHandler = (
   if (err.name === 'ValidationError') {
     // @ts-ignore
     // const message: string = Object.values(err.errors).reduce((acc, curr) => curr.message, '')
-    // error = new ErrorResponse(message, 400)
     const message: string = Object.values(err.errors).forEach(({ properties }) => {
       console.log(properties)
       error[properties.path] = properties.message
     })
-    error.status = 400
+    error = new ErrorResponse(message, 400)
   }
   // Express validator errors
   if (error.message === 'ValidationError') {
+    error.status = 400
     error.message = error.errors.length === 1 ? error.errors[0] : error.errors
   }
 
