@@ -12,7 +12,7 @@ dotenv.config({
   path: __dirname + './../config/.env',
 })
 
-const JWT_SECRET = process.env.JWT_SECRET || ''
+export const JWT_SECRET = process.env.JWT_SECRET || ''
 const jwtOptions: jwt.SignOptions = {
   algorithm: 'HS256',
   expiresIn: '100d',
@@ -23,12 +23,12 @@ const adminPassword = process.env.ADMIN_PASSWORD || 'iamthewalrus'
 // passport.use(adminStrategy())
 const authenticate = passport.authenticate('local', { session: false })
 
-const sign = async (user: any) => {
-  const token = await jwt.sign({ id: user._id }, JWT_SECRET, jwtOptions)
+export const sign = async (id: string) => {
+  const token = await jwt.sign({ id }, JWT_SECRET, jwtOptions)
   return token
 }
 
-const verify = async (jwtString: string) => {
+export const verify = async (jwtString: string) => {
   const token = jwtString
     .replace(/^Bearer /i, '')
     .replace(/^jwt= /i, '')
@@ -100,7 +100,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
   try {
     const user = await User.create({ email, password, username })
-    const token = await sign(user)
+    const token = await sign(user._id)
 
     return res.status(201).json({ success: true, data: { user, token } })
   } catch (err) {
@@ -133,9 +133,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       return next(new ErrorResponse('Invalid credentials', 401))
     }
 
-    const token = await sign(user)
+    const token = await sign(user._id)
 
-    res.cookie('jwt', token, { httpOnly: true, maxAge: COOKIE_MAX_AGE })
+    // res.setHeader('Set-Header', `jwt=${token}`)
+    res.cookie('jwt', token, { httpOnly: true, maxAge: COOKIE_MAX_AGE, secure: true })
 
     return res.status(201).json({ success: true, data: { user, token } })
   } catch (err) {
@@ -145,11 +146,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   }
 }
 
-export const logout = async (req: Request, res: Response, next: NextFunction) => {
+export const logout = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     res.cookie('jwt', 'none', {
       expires: new Date(Date.now() + 10 * 1000),
+      maxAge: 1,
       httpOnly: true,
+      secure: true,
     })
 
     return res.status(201).json({ success: true, user: {} })
@@ -160,18 +163,18 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
   }
 }
 
-export const ensureUser = async (req: Request, res: Response, next: NextFunction) => {
+export const ensureUser = async (req: Request, _res: Response, next: NextFunction) => {
   // @ts-ignore
-  const bearer = req.headers.authorization || req.cookies.jwt
+  const token = req.headers.authorization || req.cookies.jwt
 
-  if (!bearer) {
+  if (!token) {
     return next(new ErrorResponse('No authorization token', 401))
   }
 
   let payload
 
   try {
-    payload = await verify(bearer)
+    payload = await verify(token)
   } catch (err) {
     next(new ErrorResponse(`Unauthorized (invalid token): ${err.message}`, 401))
   }
@@ -183,21 +186,17 @@ export const ensureUser = async (req: Request, res: Response, next: NextFunction
     return next(new ErrorResponse('Invalid credentials', 401))
   }
 
+  // TODO: save in locals instead
   // @ts-ignore
   req.user = user
 
   next()
 }
 
-export const ensureAdmin = async (req: Request, res: Response, next: NextFunction) => {
-  // @ts-ignore
-  const bearer = req.headers.authorization || req.cookies.jwt
-
+export const ensureAdmin = async (req: Request, _res: Response, next: NextFunction) => {
   try {
-    const payload = await verify(bearer)
-
     // @ts-ignore
-    const user = await User.findById(payload.id).select('-password').exec()
+    const user = await User.findById(req.user._id).select('-password').exec()
 
     // @ts-ignore
     const isAdmin = await user.isAdmin()
@@ -206,13 +205,16 @@ export const ensureAdmin = async (req: Request, res: Response, next: NextFunctio
       next(new ErrorResponse('Not enough permissions', 401))
     }
 
+    // @ts-ignore
+    req.user.isAdmin = true
+
     next()
   } catch (err) {
     next(err)
   }
 }
 
-export const ensureOwnerOrAdmin = async (req: Request, res: Response, next: NextFunction) => {
+export const ensureOwnerOrAdmin = async (req: Request, _res: Response, next: NextFunction) => {
   try {
     // @ts-ignore
     const user = req.user

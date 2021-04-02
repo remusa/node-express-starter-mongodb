@@ -5,7 +5,7 @@ import ErrorResponse from './error'
 // @desc Get many resources
 // @route GET /api/v1/resource
 // @access Public
-const getMany = (model: Model<any>) => async (req: Request, res: Response, next: NextFunction) => {
+const getMany = (model: Model<any>) => async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const docs = await model.find().lean().exec()
 

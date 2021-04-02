@@ -1,8 +1,7 @@
 import bcrypt from 'bcryptjs'
 import mongoose, { Document, Model, model, Schema } from 'mongoose'
+import ErrorResponse from '../../utils/error'
 import validator from 'validator'
-
-const BCRYPT_SALT = bcrypt.genSaltSync(10)
 
 enum PERMISSIONS {
   'ADMIN' = 'ADMIN',
@@ -63,8 +62,8 @@ UserSchema.pre('save', async function (next: mongoose.HookNextFunction) {
   }
 
   const password = this.get('password')
-
-  const hash = await bcrypt.hash(password, BCRYPT_SALT)
+  const salt = bcrypt.genSaltSync(10)
+  const hash = await bcrypt.hash(password, salt)
   this.set({ password: hash })
 
   next()
@@ -72,7 +71,6 @@ UserSchema.pre('save', async function (next: mongoose.HookNextFunction) {
 
 UserSchema.methods.checkPassword = async function (password: string) {
   const passwordHash = this.get('password')
-
   const match = await bcrypt.compare(password, passwordHash)
 
   return match
@@ -80,7 +78,6 @@ UserSchema.methods.checkPassword = async function (password: string) {
 
 UserSchema.methods.hasPermissions = async function (permissionsNeeded: string[]) {
   const userPermissions = this.get('permissions')
-
   const matchedPermissions = await userPermissions.filter((permissionTheyHave: string) =>
     permissionsNeeded.includes(permissionTheyHave),
   )
@@ -90,10 +87,27 @@ UserSchema.methods.hasPermissions = async function (permissionsNeeded: string[])
 
 UserSchema.methods.isAdmin = async function () {
   const userPermissions = this.get('permissions')
-
   const isAdmin = userPermissions.includes('ADMIN')
 
   return isAdmin
+}
+
+// NOTE: methods -> instance, statics -> model
+// TODO: switch login to UserSchema statics login
+UserSchema.statics.login = async function (email: string, password: string) {
+  const user = await this.findOne({ email })
+
+  if (!user) {
+    throw new ErrorResponse('Invalid credentials', 401)
+  }
+
+  const match = await bcrypt.compare(password, user.password)
+
+  if (match) {
+    return user
+  }
+
+  throw new ErrorResponse('Invalid credentials', 401)
 }
 
 export const User: Model<IUser> = model('User', UserSchema)
