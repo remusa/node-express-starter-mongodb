@@ -1,10 +1,10 @@
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
-import mongoSanitize from 'express-mongo-sanitize'
 import dotenv from 'dotenv'
 import express, { json, NextFunction, Request, Response, urlencoded } from 'express'
-import helmet from 'helmet'
+import mongoSanitize from 'express-mongo-sanitize'
 import rateLimit from 'express-rate-limit'
+import helmet from 'helmet'
 import hpp from 'hpp'
 import morgan from 'morgan'
 import path from 'path'
@@ -16,13 +16,13 @@ import {
   ensureAdmin,
   ensureUser,
   login,
+  logout,
   register,
   validate,
   validateRegister,
-  logout,
 } from './utils/auth'
-import middleware from './utils/middleware'
 import ErrorResponse from './utils/error'
+import middleware from './utils/middleware'
 
 dotenv.config({
   path: './config/.env',
@@ -41,8 +41,10 @@ connectDB(DB_URL)
 const app: express.Application = express()
 
 // Logging
-app.use(middleware.logger)
-app.use(morgan('dev'))
+if (ENV === 'development') {
+  app.use(middleware.logger)
+  app.use(morgan('dev'))
+}
 
 // Security headers
 app.disable('x-powered-by')
@@ -87,8 +89,8 @@ app.use(express.static(PUBLIC))
 // Routes
 const publicFile = (file: string): string => path.join(PUBLIC, file)
 
-app.get('/', (req: Request, res: Response) => res.sendFile(publicFile('index.html')))
-app.get('/add', (req: Request, res: Response) => res.sendFile(publicFile('add.html')))
+app.get('/', (_req: Request, res: Response) => res.sendFile(publicFile('index.html')))
+app.get('/add', (_req: Request, res: Response) => res.sendFile(publicFile('add.html')))
 
 // Auth routes
 app.post('/auth/register', validateRegister, register)
@@ -102,7 +104,7 @@ app.use('/api/v1/posts', postsRouter)
 app.use('/api/v1/users', usersRouter)
 
 // Admin routes
-app.use('/api/v1/admin', ensureAdmin, (req: Request, res: Response, next: NextFunction) => {
+app.use('/api/v1/admin', ensureAdmin, (_req: Request, res: Response, next: NextFunction) => {
   res.status(200).json({
     success: true,
     messagge: 'Admin privileges',
@@ -110,9 +112,8 @@ app.use('/api/v1/admin', ensureAdmin, (req: Request, res: Response, next: NextFu
 })
 
 // Catch 404 and forward to error handler
-app.use((req: Request, res: Response, next: NextFunction) => {
+app.use((_req: Request, _res: Response, next: NextFunction) => {
   const err = new ErrorResponse('Not Found', 404)
-
   return next(err)
 })
 

@@ -146,7 +146,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   }
 }
 
-export const logout = async (req: Request, res: Response, next: NextFunction) => {
+export const logout = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     res.cookie('jwt', 'none', {
       expires: new Date(Date.now() + 10 * 1000),
@@ -163,7 +163,7 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
   }
 }
 
-export const ensureUser = async (req: Request, res: Response, next: NextFunction) => {
+export const ensureUser = async (req: Request, _res: Response, next: NextFunction) => {
   // @ts-ignore
   const token = req.headers.authorization || req.cookies.jwt
 
@@ -193,7 +193,7 @@ export const ensureUser = async (req: Request, res: Response, next: NextFunction
   next()
 }
 
-export const ensureAdmin = async (req: Request, res: Response, next: NextFunction) => {
+export const ensureAdmin = async (req: Request, _res: Response, next: NextFunction) => {
   try {
     // @ts-ignore
     const user = await User.findById(req.user._id).select('-password').exec()
@@ -214,7 +214,7 @@ export const ensureAdmin = async (req: Request, res: Response, next: NextFunctio
   }
 }
 
-export const ensureOwnerOrAdmin = async (req: Request, res: Response, next: NextFunction) => {
+export const ensureOwnerOrAdmin = async (req: Request, _res: Response, next: NextFunction) => {
   try {
     // @ts-ignore
     const user = req.user

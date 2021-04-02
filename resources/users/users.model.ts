@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import mongoose, { Document, Model, model, Schema } from 'mongoose'
-import ErrorResponse from 'utils/error'
+import ErrorResponse from '../../utils/error'
 import validator from 'validator'
 
 enum PERMISSIONS {
